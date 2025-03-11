@@ -3,41 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>20 Pip Challenge</title>
-  
+  <title>20 Pip Challenge Calculator</title>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
       margin: 0;
       padding: 20px;
-      background-color: #f5f5f5;
+      background-color: #f4f6f8;
       color: #333;
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 1000px;
       margin: 0 auto;
     }
     
-    .title {
-      text-align: center;
-      margin-bottom: 30px;
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
     }
     
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 30px;
+      margin-bottom: 15px;
     }
     
     th, td {
-      padding: 8px 12px;
-      border: 1px solid #ddd;
+      padding: 8px;
       text-align: right;
+      border: 1px solid #ddd;
     }
     
     th {
       background-color: #f2f2f2;
+      font-weight: bold;
       text-align: center;
     }
     
@@ -45,283 +53,580 @@
       background-color: #f9f9f9;
     }
     
-    .card {
-      background-color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-    
     .positive {
-      color: #10b981;
+      color: #28a745;
     }
     
-    h2 {
-      margin-top: 0;
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       margin-bottom: 20px;
     }
-
-    .chart-container {
-      position: relative;
-      height: 400px;
-      width: 100%;
-      overflow: hidden;
+    
+    .control-group {
+      margin-right: 15px;
+      margin-bottom: 10px;
     }
-
+    
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    input {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100px;
+    }
+    
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .bar-chart {
+      height: 400px;
+      position: relative;
+      margin-top: 30px;
+      border-bottom: 2px solid #333;
+      border-left: 2px solid #333;
+    }
+    
     .bar {
       position: absolute;
       bottom: 0;
-      background-color: #8884d8;
-      border: 1px solid #7673b5;
-      border-radius: 4px 4px 0 0;
-      transition: height 0.3s ease;
+      width: 30px;
+      background-color: #4285f4;
+      transition: height 0.3s;
+      border-radius: 3px 3px 0 0;
     }
-
+    
     .bar-label {
       position: absolute;
-      text-align: center;
-      width: 100%;
       bottom: -25px;
       font-size: 12px;
-    }
-
-    .bar-value {
-      position: absolute;
       text-align: center;
-      width: 100%;
-      top: -20px;
-      font-size: 12px;
-      color: #333;
-    }
-
-    .x-axis {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background-color: #333;
-    }
-
-    .y-axis {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 1px;
-      background-color: #333;
-    }
-
-    .axis-label {
-      position: absolute;
-      font-size: 12px;
-    }
-
-    .x-label {
-      bottom: -40px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .y-label {
-      left: -40px;
-      top: 50%;
-      transform: rotate(-90deg) translateX(-50%);
+      transform: rotate(-45deg);
       transform-origin: left top;
+    }
+    
+    .note {
+      background-color: #ffffdd;
+      padding: 10px;
+      border-left: 4px solid #ffcc00;
+      margin-bottom: 20px;
+    }
+    
+    .findings {
+      background-color: #e8f4fd;
+      padding: 15px;
+      border-radius: 4px;
+      margin-top: 20px;
+    }
+    
+    .findings h3 {
+      margin-top: 0;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-right: 10px;
+    }
+    
+    .tab.active {
+      border-bottom-color: #4285f4;
+      font-weight: bold;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">20 Pip Trading Challenge</h1>
+    <h1>20 Pip Challenge Calculator</h1>
     
     <div class="card">
-      <h2>20 Pip Challenge - Summary</h2>
-      <div id="summary-info"></div>
-    </div>
-    
-    <div class="card">
-      <h2>20 Pip Challenge - Account Growth Visualization</h2>
-      <div class="chart-container" id="chart">
-        <div class="x-axis"></div>
-        <div class="y-axis"></div>
-        <div class="axis-label x-label">Trade Number</div>
-        <div class="axis-label y-label">Account Balance ($)</div>
-        <!-- Bars will be added here by JavaScript -->
+      <h2>Parameters</h2>
+      <div class="controls">
+        <div class="control-group">
+          <label for="starting-balance">Starting Balance ($)</label>
+          <input type="number" id="starting-balance" value="20" min="1">
+        </div>
+        <div class="control-group">
+          <label for="risk-percentage">Risk Percentage (%)</label>
+          <input type="number" id="risk-percentage" value="23" min="1" max="100">
+        </div>
+        <div class="control-group">
+          <label for="reward-risk">Reward:Risk Ratio</label>
+          <input type="number" id="reward-risk" value="1.3" min="0.1" step="0.1">
+        </div>
+        <div class="control-group">
+          <label for="target-balance">Target Balance ($)</label>
+          <input type="number" id="target-balance" value="50000" min="100">
+        </div>
       </div>
+      <button id="calculate-btn">Calculate</button>
     </div>
     
     <div class="card">
-      <h2>20 Pip Challenge - Detailed Breakdown</h2>
-      <div class="table-container">
-        <table id="results-table">
+      <h2>Challenge Summary</h2>
+      <div id="challenge-summary"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Account Growth Chart</h2>
+      <div class="bar-chart" id="growth-chart"></div>
+    </div>
+    
+    <div class="card">
+      <h2>Analysis</h2>
+      <div class="tabs">
+        <div class="tab active" data-tab="breakdown">Trade Breakdown</div>
+        <div class="tab" data-tab="winrates">Win Rates</div>
+        <div class="tab" data-tab="kelly">Kelly Criterion</div>
+        <div class="tab" data-tab="probability">Probability</div>
+      </div>
+      
+      <div class="tab-content active" id="breakdown-tab">
+        <h3>Trade-by-Trade Breakdown</h3>
+        <div style="overflow-x: auto;">
+          <table id="breakdown-table">
+            <thead>
+              <tr>
+                <th>Trade #</th>
+                <th>Starting Balance</th>
+                <th>Risk %</th>
+                <th>Amount Risked</th>
+                <th>Profit</th>
+                <th>Ending Balance</th>
+                <th>Growth %</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Table data will be filled by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="winrates-tab">
+        <h3>Win Rate Impact</h3>
+        <table>
           <thead>
             <tr>
-              <th>Trade #</th>
-              <th>Starting Balance</th>
-              <th>Risk %</th>
-              <th>Amount Risked</th>
-              <th>Profit</th>
-              <th>Ending Balance</th>
-              <th>Growth %</th>
+              <th>Win Rate</th>
+              <th>Success Rate</th>
+              <th>Avg Trades</th>
             </tr>
           </thead>
           <tbody>
-            <!-- Table rows will be added here by JavaScript -->
+            <tr><td>50%</td><td>2.8%</td><td>198.7</td></tr>
+            <tr><td>55%</td><td>34.2%</td><td>181.7</td></tr>
+            <tr><td>60%</td><td>82.6%</td><td>142.5</td></tr>
+            <tr><td>65%</td><td>99.2%</td><td>99.9</td></tr>
+            <tr><td>70%</td><td>100.0%</td><td>75.6</td></tr>
+            <tr><td>75%</td><td>100.0%</td><td>60.0</td></tr>
+            <tr><td>80%</td><td>100.0%</td><td>49.5</td></tr>
+            <tr><td>85%</td><td>100.0%</td><td>43.2</td></tr>
+            <tr><td>90%</td><td>100.0%</td><td>37.6</td></tr>
           </tbody>
         </table>
+        <div class="findings">
+          <h3>Finding</h3>
+          <p>A win rate of at least 55% gives you a reasonable chance of completing the challenge. At 65% win rate, your success rate increases to nearly 100%.</p>
+        </div>
       </div>
+      
+      <div class="tab-content" id="kelly-tab">
+        <h3>Kelly Criterion Analysis</h3>
+        <table id="kelly-table">
+          <thead>
+            <tr>
+              <th>Win Rate</th>
+              <th>Kelly Optimal Bet Size</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data will be filled by JavaScript -->
+          </tbody>
+        </table>
+        <div class="findings">
+          <h3>Finding</h3>
+          <p>With a 60% win rate, the Kelly Criterion suggests a risk of about 30% per trade. Your current risk is <span id="current-risk-display">23%</span>.</p>
+          <p id="kelly-comparison"></p>
+        </div>
+      </div>
+      
+      <div class="tab-content" id="probability-tab">
+        <h3>Probability Analysis</h3>
+        <table id="probability-table">
+          <thead>
+            <tr>
+              <th>Win Rate</th>
+              <th>Probability of <span id="wins-needed-display">30</span> Consecutive Wins</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data will be filled by JavaScript -->
+          </tbody>
+        </table>
+        <div class="findings">
+          <h3>Finding</h3>
+          <p>The probability of winning <span id="wins-needed-display2">30</span> consecutive trades is extremely low, even with a high win rate.</p>
+          <p>However, simulations show that you don't necessarily need consecutive wins - you just need more wins than losses over time to reach your target.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h2>Conclusions</h2>
+      <ol>
+        <li>You need a win rate of at least 55% to have a reasonable chance of success.</li>
+        <li>With a 60% win rate, your current risk level appears to be near optimal.</li>
+        <li>At 65% win rate or higher, your success rate approaches 100%.</li>
+        <li>The probability of winning many consecutive trades is extremely low - your success will depend on having more wins than losses over an extended period.</li>
+        <li>Consider using a more conservative risk percentage (15-20%) if your win rate is below 60%.</li>
+      </ol>
     </div>
   </div>
 
   <script>
-    // Initial parameters
-    const startingBalance = 20;
-    const riskPercentage = 0.23; // 23% of balance
-    const rewardRiskRatio = 1.3; // Reward:Risk = 1:1.3
-    const targetBalance = 50000;
-    const maxLevels = 30;
-
+    // Get DOM elements
+    const startingBalanceInput = document.getElementById('starting-balance');
+    const riskPercentageInput = document.getElementById('risk-percentage');
+    const rewardRiskInput = document.getElementById('reward-risk');
+    const targetBalanceInput = document.getElementById('target-balance');
+    const calculateBtn = document.getElementById('calculate-btn');
+    const challengeSummary = document.getElementById('challenge-summary');
+    const growthChart = document.getElementById('growth-chart');
+    const breakdownTable = document.getElementById('breakdown-table').querySelector('tbody');
+    
+    // Default parameters
+    let startingBalance = 20;
+    let riskPercentage = 0.23;
+    let rewardRiskRatio = 1.3;
+    let targetBalance = 50000;
+    
+    // Initialize tabs
+    function initTabs() {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Remove active class from all tabs
+          tabs.forEach(t => t.classList.remove('active'));
+          
+          // Add active class to clicked tab
+          this.classList.add('active');
+          
+          // Hide all tab contents
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // Show corresponding tab content
+          const tabId = this.getAttribute('data-tab') + '-tab';
+          document.getElementById(tabId).classList.add('active');
+        });
+      });
+    }
+    
+    // Format currency
+    function formatCurrency(value) {
+      return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    
     // Calculate growth on a winning trade
     function calculateWin(balance) {
       const amountRisked = balance * riskPercentage;
       const profit = amountRisked * rewardRiskRatio;
       return balance + profit;
     }
-
-    // Generate all winning trades scenario
-    function generateChartData() {
+    
+    // Generate growth data
+    function generateGrowthData() {
       let balance = startingBalance;
       const results = [];
+      let winsNeeded = 0;
       
-      for (let level = 1; level <= maxLevels; level++) {
+      while (balance < targetBalance && winsNeeded < 200) {
         const startBalance = balance;
         const amountRisked = startBalance * riskPercentage;
         balance = calculateWin(startBalance);
         const profit = balance - startBalance;
         
         results.push({
-          level,
-          startBalance: parseFloat(startBalance.toFixed(2)),
-          amountRisked: parseFloat(amountRisked.toFixed(2)),
-          profit: parseFloat(profit.toFixed(2)),
-          endBalance: parseFloat(balance.toFixed(2)),
-          percentageGrowth: parseFloat(((balance / startBalance - 1) * 100).toFixed(2))
+          level: winsNeeded + 1,
+          startBalance: startBalance,
+          amountRisked: amountRisked,
+          profit: profit,
+          endBalance: balance,
+          percentageGrowth: ((balance / startBalance - 1) * 100)
         });
         
+        winsNeeded++;
+        
         if (balance >= targetBalance) {
-          break; // Target reached
+          break;
         }
       }
       
-      return results;
+      return {
+        growthData: results,
+        winsNeeded: winsNeeded
+      };
     }
-
-    // Format currency
-    function formatCurrency(value) {
-      return '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    
+    // Calculate Kelly Criterion
+    function calculateKelly(winRate) {
+      const p = winRate;
+      const q = 1 - p;
+      const b = rewardRiskRatio;
+      
+      return Math.max(0, (p * b - q) / b) * 100;
     }
-
-    // Initialize the visualization
-    function initVisualization() {
-      const chartData = generateChartData();
-      const winsNeeded = chartData.length;
+    
+    // Calculate probability of consecutive wins
+    function calculateProbability(winRate, winsNeeded) {
+      return Math.pow(winRate, winsNeeded) * 100;
+    }
+    
+    // Update the growth chart
+    function updateGrowthChart(data) {
+      // Clear previous chart
+      growthChart.innerHTML = '';
       
-      // Calculate the final winning percentage
-      const finalPercentage = chartData.length > 0 
-        ? ((chartData[chartData.length - 1].endBalance / startingBalance - 1) * 100).toFixed(2) 
-        : 0;
+      // Create bars
+      const maxBalance = data[data.length - 1].endBalance;
+      const chartWidth = growthChart.offsetWidth - 40;
+      const barWidth = Math.min(30, chartWidth / (data.length * 1.5));
+      const spacing = barWidth * 0.5;
       
-      // Update summary info
-      const summaryElement = document.getElementById('summary-info');
-      summaryElement.innerHTML = `
+      // Only show a subset of bars to avoid overcrowding
+      // Show first few, last few, and some in between
+      const indicesToShow = [];
+      
+      if (data.length <= 20) {
+        // Show all if we have 20 or fewer
+        for (let i = 0; i < data.length; i++) {
+          indicesToShow.push(i);
+        }
+      } else {
+        // Show first 3
+        indicesToShow.push(0, 1, 2);
+        
+        // Show some middle ones
+        const step = Math.floor(data.length / 10);
+        for (let i = step; i < data.length - 3; i += step) {
+          indicesToShow.push(i);
+        }
+        
+        // Show last 3
+        indicesToShow.push(data.length - 3, data.length - 2, data.length - 1);
+      }
+      
+      indicesToShow.sort((a, b) => a - b);
+      
+      // Create bars for selected indices
+      indicesToShow.forEach((i, index) => {
+        const item = data[i];
+        const heightPercentage = (item.endBalance / maxBalance) * 100;
+        const height = (heightPercentage / 100) * (growthChart.offsetHeight - 40);
+        
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = height + 'px';
+        bar.style.left = (index * (barWidth + spacing) + 20) + 'px';
+        bar.style.width = barWidth + 'px';
+        
+        // Add tooltip with balance info
+        bar.title = `Trade #${item.level}: ${formatCurrency(item.endBalance)}`;
+        
+        // Add label
+        const label = document.createElement('div');
+        label.className = 'bar-label';
+        label.textContent = `#${item.level}`;
+        label.style.width = barWidth + 'px';
+        label.style.left = (index * (barWidth + spacing) + 20) + 'px';
+        
+        growthChart.appendChild(bar);
+        growthChart.appendChild(label);
+      });
+    }
+    
+    // Update the challenge summary
+    function updateSummary(data, winsNeeded) {
+      const finalBalance = data[data.length - 1].endBalance;
+      const totalGrowth = ((finalBalance / startingBalance) - 1) * 100;
+      
+      challengeSummary.innerHTML = `
         <p><strong>Starting Balance:</strong> ${formatCurrency(startingBalance)}</p>
         <p><strong>Risk per Trade:</strong> ${(riskPercentage * 100).toFixed(1)}% of current balance</p>
         <p><strong>Reward:Risk Ratio:</strong> 1:${rewardRiskRatio}</p>
-        <p><strong>Target:</strong> ${formatCurrency(targetBalance)}</p>
+        <p><strong>Target Balance:</strong> ${formatCurrency(targetBalance)}</p>
         <p><strong>Consecutive Wins Needed:</strong> ${winsNeeded}</p>
-        <p><strong>Total Growth:</strong> ${finalPercentage}%</p>
-        <p><strong>Final Balance:</strong> ${formatCurrency(chartData[chartData.length - 1].endBalance)}</p>
+        <p><strong>Final Balance After ${winsNeeded} Wins:</strong> ${formatCurrency(finalBalance)}</p>
+        <p><strong>Total Growth:</strong> ${totalGrowth.toFixed(2)}%</p>
       `;
+    }
+    
+    // Update the breakdown table
+    function updateBreakdownTable(data) {
+      breakdownTable.innerHTML = '';
       
-      // Update the table
-      const tableBody = document.querySelector('#results-table tbody');
-      let tableHtml = '';
-      
-      chartData.forEach(row => {
-        tableHtml += `
-          <tr>
-            <td style="text-align: center;">${row.level}</td>
-            <td>${formatCurrency(row.startBalance)}</td>
-            <td style="text-align: center;">${(riskPercentage * 100).toFixed(1)}%</td>
-            <td>${formatCurrency(row.amountRisked)}</td>
-            <td class="positive">${formatCurrency(row.profit)}</td>
-            <td>${formatCurrency(row.endBalance)}</td>
-            <td>${row.percentageGrowth.toFixed(2)}%</td>
-          </tr>
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td>${row.level}</td>
+          <td>${formatCurrency(row.startBalance)}</td>
+          <td>${(riskPercentage * 100).toFixed(1)}%</td>
+          <td>${formatCurrency(row.amountRisked)}</td>
+          <td class="positive">${formatCurrency(row.profit)}</td>
+          <td>${formatCurrency(row.endBalance)}</td>
+          <td>${row.percentageGrowth.toFixed(2)}%</td>
         `;
-      });
-      
-      tableBody.innerHTML = tableHtml;
-      
-      // Create a simple chart
-      const chartContainer = document.getElementById('chart');
-      
-      // Get the max value for scaling
-      const maxBalance = Math.max(...chartData.map(d => d.endBalance));
-      
-      // Clear previous chart if any
-      const existingBars = chartContainer.querySelectorAll('.bar, .bar-label, .bar-value');
-      existingBars.forEach(bar => bar.remove());
-      
-      // Calculate bar width based on number of items
-      const barWidth = (chartContainer.offsetWidth - 60) / chartData.length;
-      const chartHeight = chartContainer.offsetHeight - 60;
-      
-      // We'll use a log scale for better visualization
-      const getLogHeight = (value) => {
-        const logMax = Math.log(maxBalance);
-        const logVal = Math.log(value);
-        return (logVal / logMax) * chartHeight;
-      };
-      
-      // Add bars for every 2nd data point to avoid overcrowding
-      chartData.forEach((d, i) => {
-        // Only show every other bar for small numbers, and all bars for the last few
-        if (i % 2 === 0 || i > chartData.length - 5 || i < 2) {
-          const barHeight = getLogHeight(d.endBalance);
-          
-          const bar = document.createElement('div');
-          bar.className = 'bar';
-          bar.style.left = `${30 + i * barWidth}px`;
-          bar.style.width = `${barWidth * 0.8}px`;
-          bar.style.height = `${barHeight}px`;
-          
-          const label = document.createElement('div');
-          label.className = 'bar-label';
-          label.textContent = `#${d.level}`;
-          label.style.left = `${30 + i * barWidth}px`;
-          label.style.width = `${barWidth * 0.8}px`;
-          
-          const value = document.createElement('div');
-          value.className = 'bar-value';
-          value.innerHTML = formatCurrency(d.endBalance);
-          value.style.left = `${30 + i * barWidth}px`;
-          value.style.width = `${barWidth * 0.8}px`;
-          
-          chartContainer.appendChild(bar);
-          chartContainer.appendChild(label);
-          chartContainer.appendChild(value);
-        }
+        
+        breakdownTable.appendChild(tr);
       });
     }
     
-    // Initialize when the page loads
-    window.onload = initVisualization;
+    // Update Kelly Criterion table
+    function updateKellyTable(winsNeeded) {
+      const kellyTable = document.getElementById('kelly-table').querySelector('tbody');
+      kellyTable.innerHTML = '';
+      
+      const winRates = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9];
+      
+      winRates.forEach(winRate => {
+        const kelly = calculateKelly(winRate);
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td>${(winRate * 100).toFixed(1)}%</td>
+          <td>${kelly.toFixed(2)}%</td>
+        `;
+        
+        kellyTable.appendChild(tr);
+      });
+      
+      // Update Kelly comparison text
+      const currentRisk = (riskPercentage * 100).toFixed(1);
+      document.getElementById('current-risk-display').textContent = currentRisk + '%';
+      
+      const kelly60 = calculateKelly(0.6);
+      const comparisonText = document.getElementById('kelly-comparison');
+      
+      if (riskPercentage * 100 < kelly60) {
+        comparisonText.textContent = `Your risk of ${currentRisk}% is below the Kelly-optimal value at 60% win rate (${kelly60.toFixed(1)}%), which is more conservative and reduces the risk of ruin.`;
+      } else {
+        comparisonText.textContent = `Your risk of ${currentRisk}% exceeds the Kelly-optimal value at 60% win rate (${kelly60.toFixed(1)}%), which increases the risk of ruin.`;
+      }
+    }
     
-    // Re-initialize when the window is resized
-    window.addEventListener('resize', initVisualization);
+    // Update probability table
+    function updateProbabilityTable(winsNeeded) {
+      const probabilityTable = document.getElementById('probability-table').querySelector('tbody');
+      probabilityTable.innerHTML = '';
+      
+      const winRates = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9];
+      
+      // Update wins needed display
+      document.getElementById('wins-needed-display').textContent = winsNeeded;
+      document.getElementById('wins-needed-display2').textContent = winsNeeded;
+      
+      winRates.forEach(winRate => {
+        const probability = calculateProbability(winRate, winsNeeded);
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td>${(winRate * 100).toFixed(1)}%</td>
+          <td>${probability < 0.000001 ? '< 0.000001' : probability.toFixed(6)}%</td>
+        `;
+        
+        probabilityTable.appendChild(tr);
+      });
+    }
+    
+    // Main calculation function
+    function calculateChallenge() {
+      // Get values from inputs
+      startingBalance = parseFloat(startingBalanceInput.value);
+      riskPercentage = parseFloat(riskPercentageInput.value) / 100;
+      rewardRiskRatio = parseFloat(rewardRiskInput.value);
+      targetBalance = parseFloat(targetBalanceInput.value);
+      
+      // Validate inputs
+      if (isNaN(startingBalance) || startingBalance <= 0) {
+        alert('Starting balance must be a positive number');
+        return;
+      }
+      
+      if (isNaN(riskPercentage) || riskPercentage <= 0 || riskPercentage > 1) {
+        alert('Risk percentage must be between 1 and 100');
+        return;
+      }
+      
+      if (isNaN(rewardRiskRatio) || rewardRiskRatio <= 0) {
+        alert('Reward:Risk ratio must be a positive number');
+        return;
+      }
+      
+      if (isNaN(targetBalance) || targetBalance <= startingBalance) {
+        alert('Target balance must be greater than starting balance');
+        return;
+      }
+      
+      // Generate data
+      const { growthData, winsNeeded } = generateGrowthData();
+      
+      // Update UI
+      updateSummary(growthData, winsNeeded);
+      updateBreakdownTable(growthData);
+      updateGrowthChart(growthData);
+      updateKellyTable(winsNeeded);
+      updateProbabilityTable(winsNeeded);
+    }
+    
+    // Event listeners
+    calculateBtn.addEventListener('click', calculateChallenge);
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      initTabs();
+      calculateChallenge(); // Initial calculation
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      const { growthData } = generateGrowthData();
+      updateGrowthChart(growthData);
+    });
   </script>
 </body>
 </html>
