@@ -100,6 +100,7 @@
             <li>Each level represents a 20 pip winning trade</li>
             <li>Goal: Reach the target amount (default: $50,000) without blowing your account</li>
             <li>Account is considered blown when balance falls below $1</li>
+            <li>Note: Pip values vary by currency pair (e.g., XAU/USD = $1.00, EUR/USD = $0.10 per $1,000)</li>
         </ul>
     </div>
     
@@ -127,13 +128,13 @@
                 <option value="USDCAD" data-pip-value="0.07">USD/CAD</option>
                 <option value="USDCHF" data-pip-value="0.10">USD/CHF</option>
                 <option value="NZDUSD" data-pip-value="0.10">NZD/USD</option>
-                <option value="XAUUSD" data-pip-value="0.10">XAU/USD (Gold)</option>
+                <option value="XAUUSD" data-pip-value="1.00">XAU/USD (Gold)</option>
                 <option value="custom" data-pip-value="0.10">Custom...</option>
             </select>
         </div>
         <div class="input-group" id="custom-pip-container" style="display: none;">
             <label for="pip-value">Custom Pip Value per $1,000 ($):</label>
-            <input type="number" id="pip-value" value="0.10" min="0.01" step="0.01">
+            <input type="number" id="pip-value" value="0.10" min="0.01" step="0.01" oninput="calculateChallenge()">
         </div>
         <button id="calculate-btn">Calculate</button>
     </div>
@@ -231,14 +232,272 @@
     </div>
 
     <script>
+        // All functions defined at the top level
+        function calculateChallenge() {
+            // Get parameters
+            const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+            const riskPercentage = parseFloat(document.getElementById('risk-percentage').value) / 100;
+            const targetAmount = parseFloat(document.getElementById('target-amount').value);
+            
+            // Get pip value based on currency pair selection
+            let pipValue;
+            const currencyPairSelect = document.getElementById('currency-pair');
+            const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+            
+            if (currencyPairSelect.value === 'custom') {
+                pipValue = parseFloat(document.getElementById('pip-value').value);
+            } else {
+                pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+            }
+            
+            const pips = 20; // Each level is 20 pips
+            
+            // Reset table
+            const tableBody = document.getElementById('table-body');
+            tableBody.innerHTML = '';
+            
+            let level = 1;
+            let balance = initialBalance;
+            let targetReached = false;
+            let accountBlown = false;
+            
+            // Create rows until target is reached or account is blown
+            while (!targetReached && !accountBlown && level <= 1000) { // Limit to 1000 levels as safety
+                const riskAmount = balance * riskPercentage;
+                const lotSize = (riskAmount / (pips * pipValue)).toFixed(2);
+                const profit = pipValue * pips * parseFloat(lotSize);
+                const newBalance = balance + profit;
+                const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
+                
+                // Create row
+                const row = document.createElement('tr');
+                
+                if (newBalance >= targetAmount) {
+                    row.classList.add('success');
+                    targetReached = true;
+                }
+                
+                if (newBalance < 1) {
+                    row.classList.add('danger');
+                    accountBlown = true;
+                }
+                
+                row.innerHTML = `
+                    <td>${level}</td>
+                    <td>${balance.toFixed(2)}</td>
+                    <td>${riskAmount.toFixed(2)}</td>
+                    <td>${lotSize}</td>
+                    <td>${profit.toFixed(2)}</td>
+                    <td>${newBalance.toFixed(2)}</td>
+                    <td>${percentOfTarget}%</td>
+                `;
+                
+                tableBody.appendChild(row);
+                
+                // Update for next iteration
+                balance = newBalance;
+                level++;
+                
+                if (balance < 1) {
+                    accountBlown = true;
+                }
+                
+                if (balance >= targetAmount) {
+                    targetReached = true;
+                }
+            }
+            
+            // Display summary
+            const summary = document.getElementById('summary');
+            if (targetReached) {
+                summary.innerHTML = `<p><strong>Success!</strong> Target of $${targetAmount.toFixed(2)} reached in ${level - 1} trades (levels).</p>`;
+            } else if (accountBlown) {
+                summary.innerHTML = `<p><strong>Account blown!</strong> Balance fell below $1 at level ${level - 1}.</p>`;
+            } else {
+                summary.innerHTML = `<p><strong>Calculation stopped</strong> after 1000 levels without reaching target.</p>`;
+            }
+        }
+        
+        function updateRiskReward() {
+            const avgWin = parseFloat(document.getElementById('avg-win').value);
+            const avgLoss = parseFloat(document.getElementById('avg-loss').value);
+            if (avgLoss > 0) {
+                const riskReward = avgWin / avgLoss;
+                document.getElementById('risk-reward').value = riskReward.toFixed(1);
+            }
+        }
+        
+        function updateRiskRewardFromLoss() {
+            const avgWin = parseFloat(document.getElementById('avg-win').value);
+            const avgLoss = parseFloat(document.getElementById('avg-loss').value);
+            if (avgLoss > 0) {
+                const riskReward = avgWin / avgLoss;
+                document.getElementById('risk-reward').value = riskReward.toFixed(1);
+            }
+        }
+        
+        function updateAvgLoss() {
+            const avgWin = parseFloat(document.getElementById('avg-win').value);
+            const riskReward = parseFloat(document.getElementById('risk-reward').value);
+            if (riskReward > 0) {
+                const avgLoss = avgWin / riskReward;
+                document.getElementById('avg-loss').value = avgLoss.toFixed(1);
+            }
+        }
+        
+        function runMonteCarloSimulation(initialBalance, riskPercentage, winRate, avgWin, avgLoss, numTrades, numSimulations) {
+            // Track results
+            let finalBalances = [];
+            let targetAmount = parseFloat(document.getElementById('target-amount').value);
+            let successes = 0;
+            let failures = 0;
+            let maxDrawdowns = [];
+            
+            for (let sim = 0; sim < numSimulations; sim++) {
+                let balance = initialBalance;
+                let peak = balance;
+                let maxDrawdown = 0;
+                
+                for (let trade = 0; trade < numTrades && balance > 0 && balance < targetAmount; trade++) {
+                    const riskAmount = balance * riskPercentage;
+                    const tradeResult = Math.random() < winRate; // True if win
+                    
+                    if (tradeResult) {
+                        // Win trade
+                        const lotSize = riskAmount / avgLoss;
+                        balance += lotSize * avgWin;
+                    } else {
+                        // Lose trade
+                        balance -= riskAmount;
+                    }
+                    
+                    // Update peak and max drawdown
+                    if (balance > peak) {
+                        peak = balance;
+                    } else {
+                        const currentDrawdown = (peak - balance) / peak;
+                        maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
+                    }
+                    
+                    // Check for target or ruin
+                    if (balance >= targetAmount) {
+                        successes++;
+                        break;
+                    } else if (balance < 1) {
+                        failures++;
+                        break;
+                    }
+                }
+                
+                finalBalances.push(balance);
+                maxDrawdowns.push(maxDrawdown);
+            }
+            
+            // Sort balances for median
+            finalBalances.sort((a, b) => a - b);
+            
+            // Calculate statistics
+            return {
+                avgFinalBalance: finalBalances.reduce((sum, bal) => sum + bal, 0) / numSimulations,
+                medianFinalBalance: finalBalances[Math.floor(numSimulations / 2)],
+                maxFinalBalance: Math.max(...finalBalances),
+                minFinalBalance: Math.min(...finalBalances),
+                probabilityReachTarget: successes / numSimulations,
+                probabilityAccountBlown: failures / numSimulations,
+                avgMaxDrawdown: maxDrawdowns.reduce((sum, dd) => sum + dd, 0) / numSimulations,
+                accountsBlown: failures
+            };
+        }
+        
+        function analyzeStrategy() {
+            // Get analysis parameters
+            const winRate = parseFloat(document.getElementById('win-rate').value) / 100;
+            const avgWin = parseFloat(document.getElementById('avg-win').value);
+            const avgLoss = parseFloat(document.getElementById('avg-loss').value);
+            const numTrades = parseInt(document.getElementById('num-trades').value);
+            
+            // Update Current Risk:Reward display
+            const riskReward = avgWin / avgLoss;
+            document.getElementById('current-risk-reward').textContent = `1:${riskReward.toFixed(2)}`;
+            
+            // Get trading parameters
+            const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+            const riskPercentage = parseFloat(document.getElementById('risk-percentage').value) / 100;
+            
+            // Get pip value based on currency pair selection
+            let pipValue;
+            const currencyPairSelect = document.getElementById('currency-pair');
+            const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+            
+            if (currencyPairSelect.value === 'custom') {
+                pipValue = parseFloat(document.getElementById('pip-value').value);
+            } else {
+                pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+            }
+            
+            // Calculate profit factor
+            const expectedWin = avgWin * pipValue;
+            const expectedLoss = avgLoss * pipValue;
+            const profitFactor = (winRate * expectedWin) / ((1 - winRate) * expectedLoss);
+            document.getElementById('profit-factor').textContent = profitFactor.toFixed(2);
+            
+            // Calculate Kelly Criterion
+            const b = expectedWin / expectedLoss; // Ratio of average win to average loss
+            const kellyPercentage = (winRate * (b + 1) - 1) / b;
+            document.getElementById('kelly-criterion').textContent = 
+                kellyPercentage > 0 ? 
+                `${(kellyPercentage * 100).toFixed(2)}% (Optimal risk per trade)` : 
+                "Negative (Strategy not recommended)";
+            
+            // Calculate expected value per trade
+            const expectedValue = (winRate * expectedWin) - ((1 - winRate) * expectedLoss);
+            document.getElementById('expected-value').textContent = 
+                `$${expectedValue.toFixed(2)} per standard lot`;
+            
+            // Risk adjusted return
+            const riskAdjustedReturn = profitFactor / (Math.sqrt(avgLoss * pipValue));
+            document.getElementById('risk-adjusted-return').textContent = 
+                riskAdjustedReturn.toFixed(2);
+            
+            // Run Monte Carlo simulation
+            const simulationResults = runMonteCarloSimulation(
+                initialBalance, riskPercentage, winRate, avgWin * pipValue, 
+                avgLoss * pipValue, numTrades, 1000 // 1000 simulations
+            );
+            
+            document.getElementById('probability-target').textContent = 
+                `${(simulationResults.probabilityReachTarget * 100).toFixed(2)}%`;
+            
+            document.getElementById('probability-ruin').textContent = 
+                `${(simulationResults.probabilityAccountBlown * 100).toFixed(2)}%`;
+            
+            document.getElementById('max-drawdown').textContent = 
+                `${(simulationResults.avgMaxDrawdown * 100).toFixed(2)}%`;
+            
+            // Display Monte Carlo results 
+            document.getElementById('monte-carlo-results').innerHTML = `
+                <p><strong>Number of Simulations:</strong> 1,000</p>
+                <p><strong>Accounts Blown:</strong> ${simulationResults.accountsBlown} out of 1,000 (${(simulationResults.probabilityAccountBlown*100).toFixed(2)}%)</p>
+                <p><strong>Average Final Balance:</strong> $${simulationResults.avgFinalBalance.toFixed(2)}</p>
+                <p><strong>Median Final Balance:</strong> $${simulationResults.medianFinalBalance.toFixed(2)}</p>
+                <p><strong>Best Case Final Balance:</strong> $${simulationResults.maxFinalBalance.toFixed(2)}</p>
+                <p><strong>Worst Case Final Balance:</strong> $${simulationResults.minFinalBalance.toFixed(2)}</p>
+            `;
+        }
+        
+        // Wait for the DOM to fully load before setting up event listeners
         document.addEventListener('DOMContentLoaded', function() {
             // Calculate on load
             calculateChallenge();
             
-            // Add event listener to calculate button
-            document.getElementById('calculate-btn').addEventListener('click', calculateChallenge);
+            // Initialize risk:reward calculation
+            updateRiskReward();
             
-            // Add event listener to currency pair select
+            // Set up all event listeners
+            document.getElementById('calculate-btn').addEventListener('click', calculateChallenge);
+            document.getElementById('analyze-btn').addEventListener('click', analyzeStrategy);
+            
+            // Currency pair select
             document.getElementById('currency-pair').addEventListener('change', function() {
                 const customPipContainer = document.getElementById('custom-pip-container');
                 if (this.value === 'custom') {
@@ -246,91 +505,14 @@
                 } else {
                     customPipContainer.style.display = 'none';
                 }
+                // Recalculate when currency pair changes
+                calculateChallenge();
             });
             
-            function calculateChallenge() {
-                // Get parameters
-                const initialBalance = parseFloat(document.getElementById('initial-balance').value);
-                const riskPercentage = parseFloat(document.getElementById('risk-percentage').value) / 100;
-                const targetAmount = parseFloat(document.getElementById('target-amount').value);
-                // Get pip value based on currency pair selection
-                let pipValue;
-                const currencyPairSelect = document.getElementById('currency-pair');
-                const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
-                
-                if (currencyPairSelect.value === 'custom') {
-                    pipValue = parseFloat(document.getElementById('pip-value').value);
-                } else {
-                    pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
-                }
-                
-                const pips = 20; // Each level is 20 pips
-                
-                // Reset table
-                const tableBody = document.getElementById('table-body');
-                tableBody.innerHTML = '';
-                
-                let level = 1;
-                let balance = initialBalance;
-                let targetReached = false;
-                let accountBlown = false;
-                
-                // Create rows until target is reached or account is blown
-                while (!targetReached && !accountBlown && level <= 1000) { // Limit to 1000 levels as safety
-                    const riskAmount = balance * riskPercentage;
-                    const lotSize = (riskAmount / (pips * pipValue)).toFixed(2);
-                    const profit = pipValue * pips * parseFloat(lotSize);
-                    const newBalance = balance + profit;
-                    const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
-                    
-                    // Create row
-                    const row = document.createElement('tr');
-                    
-                    if (newBalance >= targetAmount) {
-                        row.classList.add('success');
-                        targetReached = true;
-                    }
-                    
-                    if (newBalance < 1) {
-                        row.classList.add('danger');
-                        accountBlown = true;
-                    }
-                    
-                    row.innerHTML = `
-                        <td>${level}</td>
-                        <td>${balance.toFixed(2)}</td>
-                        <td>${riskAmount.toFixed(2)}</td>
-                        <td>${lotSize}</td>
-                        <td>${profit.toFixed(2)}</td>
-                        <td>${newBalance.toFixed(2)}</td>
-                        <td>${percentOfTarget}%</td>
-                    `;
-                    
-                    tableBody.appendChild(row);
-                    
-                    // Update for next iteration
-                    balance = newBalance;
-                    level++;
-                    
-                    if (balance < 1) {
-                        accountBlown = true;
-                    }
-                    
-                    if (balance >= targetAmount) {
-                        targetReached = true;
-                    }
-                }
-                
-                // Display summary
-                const summary = document.getElementById('summary');
-                if (targetReached) {
-                    summary.innerHTML = `<p><strong>Success!</strong> Target of $${targetAmount.toFixed(2)} reached in ${level - 1} trades (levels).</p>`;
-                } else if (accountBlown) {
-                    summary.innerHTML = `<p><strong>Account blown!</strong> Balance fell below $1 at level ${level - 1}.</p>`;
-                } else {
-                    summary.innerHTML = `<p><strong>Calculation stopped</strong> after 1000 levels without reaching target.</p>`;
-                }
-            }
+            // Risk:Reward ratio calculations
+            document.getElementById('avg-win').addEventListener('input', updateRiskReward);
+            document.getElementById('avg-loss').addEventListener('input', updateRiskRewardFromLoss);
+            document.getElementById('risk-reward').addEventListener('input', updateAvgLoss);
         });
     </script>
 </body>
