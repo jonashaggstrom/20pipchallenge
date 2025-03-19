@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <!-- Chart.js for visualization -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -353,7 +355,7 @@
     
     <div class="navigation">
         <a href="#" class="nav-link active">Calculator</a>
-        <a href="20-pip-challenge-journal.html" class="nav-link">Trading Journal</a>
+        <a href="#" class="nav-link" id="download-journal">Trading Journal</a>
     </div>
     
     <div class="container">
@@ -1109,6 +1111,236 @@
             
             // Initial calculation
             document.getElementById('calculate-btn').click();
+            
+            // Add Trading Journal download functionality
+            document.getElementById('download-journal').addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent the default link behavior
+                downloadJournalTemplate();
+            });
+            
+            // Function to download a template Excel file for the journal
+            function downloadJournalTemplate() {
+                // Get current parameters for default values
+                const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+                const riskPercentage = parseFloat(document.getElementById('risk-percentage').value);
+                const targetAmount = parseFloat(document.getElementById('target-amount').value);
+                const pipsPerLevel = parseFloat(document.getElementById('pips-per-level').value);
+                const currencyPairSelect = document.getElementById('currency-pair');
+                const currencyPair = currencyPairSelect.value;
+                
+                // Get pip value based on currency pair selection
+                let pipValue;
+                const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+                
+                if (currencyPairSelect.value === 'custom') {
+                    pipValue = parseFloat(document.getElementById('pip-value').value);
+                } else {
+                    pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+                }
+                
+                // Create a new workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Add metadata
+                wb.Props = {
+                    Title: "Pip Challenge Trading Journal",
+                    Subject: "Trading",
+                    Author: "Pip Challenge Calculator",
+                    CreatedDate: new Date()
+                };
+                
+                // 1. Settings Worksheet
+                const settingsData = [
+                    ['Pip Challenge Settings', ''],
+                    ['Setting', 'Value'],
+                    ['Initial Balance ($)', initialBalance],
+                    ['Risk Percentage (%)', riskPercentage],
+                    ['Target Amount ($)', targetAmount],
+                    ['Pips Per Level', pipsPerLevel],
+                    ['Currency Pair', currencyPair],
+                    ['Pip Value per $1,000', pipValue]
+                ];
+                
+                const settingsWS = XLSX.utils.aoa_to_sheet(settingsData);
+                XLSX.utils.book_append_sheet(wb, settingsWS, "Settings");
+                
+                // 2. Instructions Worksheet
+                const instructionsData = [
+                    ['Pip Challenge Instructions', ''],
+                    ['', ''],
+                    ['The Pip Challenge is a trading strategy where you:', ''],
+                    [`1. Start with ${initialBalance}`, ''],
+                    [`2. Risk ${riskPercentage}% of your balance on each trade`, ''],
+                    [`3. Target ${pipsPerLevel} pips of profit per trade`, ''],
+                    [`4. Goal is to reach ${targetAmount} without blowing your account`, ''],
+                    ['5. Account is considered blown when balance falls below $1', ''],
+                    ['', ''],
+                    ['How to Use This Journal:', ''],
+                    ['1. Enter your trades in the "Journal" sheet', ''],
+                    ['2. Fill in Level, Direction, Entry Price, and Close Price', ''],
+                    ['3. The remaining cells will be calculated automatically', ''],
+                    ['4. Use the "Statistics" sheet to track your progress', ''],
+                    ['', ''],
+                    ['Tips for Success:', ''],
+                    ['- Be consistent with your risk management', ''],
+                    ['- Only take high-probability setups', ''],
+                    ['- Maintain emotional discipline', ''],
+                    ['- Review your trades regularly to identify patterns', '']
+                ];
+                
+                const instructionsWS = XLSX.utils.aoa_to_sheet(instructionsData);
+                
+                // Set column widths for instructions
+                instructionsWS['!cols'] = [
+                    {wch: 50},  // Column A width
+                    {wch: 10}   // Column B width
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, instructionsWS, "Instructions");
+                
+                // 3. Journal Worksheet with formulas
+                const journalHeaders = [
+                    'Level', 
+                    'Date', 
+                    'Direction', 
+                    'Entry Price', 
+                    'Close Price', 
+                    'Starting Balance ($)', 
+                    'Risk Amount ($)', 
+                    'Lot Size',
+                    'Profit/Loss ($)', 
+                    'New Balance ($)', 
+                    'Notes'
+                ];
+                
+                // Create sample data for the journal
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Calculate sample values
+                const sampleRiskAmount = initialBalance * (riskPercentage/100);
+                const sampleLotSize = (sampleRiskAmount / (pipsPerLevel * pipValue)).toFixed(2);
+                const sampleProfit = (pipValue * pipsPerLevel * parseFloat(sampleLotSize)).toFixed(2);
+                const sampleNewBalance = (initialBalance + parseFloat(sampleProfit)).toFixed(2);
+                
+                const sampleData = [
+                    [
+                        1, 
+                        today, 
+                        'Long', 
+                        1950.00, 
+                        1970.00, 
+                        initialBalance, 
+                        sampleRiskAmount, 
+                        sampleLotSize,
+                        sampleProfit,
+                        sampleNewBalance,
+                        'Example trade - 20 pip win'
+                    ]
+                ];
+                
+                // Create journal data with headers and sample row
+                const journalData = [journalHeaders, ...sampleData];
+                
+                // Add 50 empty rows with formulas for calculations
+                for (let i = 0; i < 50; i++) {
+                    const level = i + 2;
+                    // Empty row with formulas
+                    // In Excel, each cell will reference the cell above it or calculate values based on inputs
+                    journalData.push([
+                        level,                                          // Level 
+                        '',                                             // Date - user input
+                        '',                                             // Direction - user input
+                        '',                                             // Entry Price - user input
+                        '',                                             // Close Price - user input
+                        `=J${level-1}`,                                 // Starting Balance = previous row's New Balance
+                        `=F${level}*${riskPercentage/100}`,            // Risk Amount = Starting Balance * Risk %
+                        `=G${level}/(${pipsPerLevel}*${pipValue})`,    // Lot Size = Risk Amount / (Pips * Pip Value)
+                        '',                                             // Profit/Loss - will add formula below
+                        `=F${level}+I${level}`,                         // New Balance = Starting Balance + Profit/Loss
+                        ''                                              // Notes - user input
+                    ]);
+                }
+                
+                const journalWS = XLSX.utils.aoa_to_sheet(journalData);
+                
+                // Set column widths
+                journalWS['!cols'] = [
+                    {wch: 6},   // Level
+                    {wch: 12},  // Date
+                    {wch: 10},  // Direction
+                    {wch: 12},  // Entry
+                    {wch: 12},  // Close
+                    {wch: 16},  // Starting Balance
+                    {wch: 14},  // Risk Amount
+                    {wch: 10},  // Lot Size
+                    {wch: 14},  // Profit/Loss
+                    {wch: 14},  // New Balance
+                    {wch: 30}   // Notes
+                ];
+                
+                // We'll add a complex formula for profit/loss calculation
+                // This formula needs to check Direction and calculate accordingly
+                for (let i = 3; i <= 52; i++) { // Start from row 3 (after header and sample)
+                    const rowIndex = XLSX.utils.encode_cell({r: i, c: 8}); // I column (Profit/Loss)
+                    const dirCell = XLSX.utils.encode_cell({r: i, c: 2});  // C column (Direction)
+                    const entryCell = XLSX.utils.encode_cell({r: i, c: 3}); // D column (Entry)
+                    const closeCell = XLSX.utils.encode_cell({r: i, c: 4}); // E column (Close)
+                    const lotCell = XLSX.utils.encode_cell({r: i, c: 7});   // H column (Lot Size)
+                    
+                    // Formula: IF Direction is "Long", then (Close-Entry)*LotSize*PipValue/PipSize, else (Entry-Close)*LotSize*PipValue/PipSize
+                    journalWS[rowIndex] = {
+                        f: `IF(OR(${dirCell}="Long",${dirCell}="LONG",${dirCell}="long"),
+                              (${closeCell}-${entryCell})*${lotCell}*${pipValue}/${currencyPair.includes('JPY') ? 0.01 : 0.0001},
+                              (${entryCell}-${closeCell})*${lotCell}*${pipValue}/${currencyPair.includes('JPY') ? 0.01 : 0.0001})`
+                    };
+                }
+                
+                XLSX.utils.book_append_sheet(wb, journalWS, "Journal");
+                
+                // 4. Statistics Worksheet with formulas to analyze performance
+                const statsData = [
+                    ['Pip Challenge Statistics', ''],
+                    ['', ''],
+                    ['Performance Metrics', 'Value'],
+                    ['Total Trades', '=COUNTA(Journal!A:A)-1'],
+                    ['Winning Trades', '=COUNTIF(Journal!I:I,">0")'],
+                    ['Losing Trades', '=COUNTIF(Journal!I:I,"<0")'],
+                    ['Win Rate (%)', '=IF(D4>0,D5/D4*100,0)'],
+                    ['', ''],
+                    ['Profit Metrics', ''],
+                    ['Total Profit ($)', '=SUMIF(Journal!I:I,">0")'],
+                    ['Total Loss ($)', '=ABS(SUMIF(Journal!I:I,"<0"))'],
+                    ['Net Profit ($)', '=D10-D11'],
+                    ['Profit Factor', '=IF(D11>0,D10/D11,"N/A")'],
+                    ['Average Win ($)', '=AVERAGEIF(Journal!I:I,">0")'],
+                    ['Average Loss ($)', '=ABS(AVERAGEIF(Journal!I:I,"<0"))'],
+                    ['', ''],
+                    ['Progress', ''],
+                    ['Current Balance ($)', '=MAX(Journal!J:J)'],
+                    ['Initial Balance ($)', '=MIN(Journal!F:F)'],
+                    ['Growth ($)', '=D18-D19'],
+                    ['Growth (%)', '=D20/D19*100'],
+                    ['Target Amount ($)', targetAmount],
+                    ['Progress to Target (%)', '=D18/D23*100'],
+                    ['', ''],
+                    ['Challenge Status', '=IF(D18>=D23,"TARGET REACHED!",IF(D18<1,"ACCOUNT BLOWN","IN PROGRESS"))']
+                ];
+                
+                const statsWS = XLSX.utils.aoa_to_sheet(statsData);
+                
+                // Set column widths
+                statsWS['!cols'] = [
+                    {wch: 5},   // A column
+                    {wch: 5},   // B column
+                    {wch: 25},  // C column
+                    {wch: 15}   // D column
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, statsWS, "Statistics");
+                
+                // 5. Write the workbook and trigger download
+                XLSX.writeFile(wb, "pip_challenge_journal.xlsx");
+            }
         });
     </script>
 </body>
