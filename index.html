@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>20 Pip Challenge Calculator</title>
+    <title>Pip Challenge Calculator</title>
     <!-- Google Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <!-- Chart.js for visualization -->
@@ -68,6 +68,34 @@
             text-align: center;
             margin: 2rem 0;
             color: var(--primary-dark);
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--gray-700);
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            background-color: var(--gray-200);
+        }
+        
+        .nav-link:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
         }
 
         .card {
@@ -207,14 +235,6 @@
         tr.danger:hover {
             background-color: rgba(247, 37, 133, 0.3);
         }
-        
-        .text-success {
-            color: var(--success-color);
-        }
-        
-        .text-danger {
-            color: var(--warning-color);
-        }
 
         .table-responsive {
             overflow-x: auto;
@@ -318,10 +338,18 @@
             visibility: visible;
             opacity: 1;
         }
+
+        .text-success {
+            color: var(--success-color);
+        }
+        
+        .text-danger {
+            color: var(--warning-color);
+        }
     </style>
 </head>
 <body>
-    <h1>20 Pip Challenge Calculator</h1>
+    <h1>Pip Challenge Calculator</h1>
     
     <div class="navigation">
         <a href="#" class="nav-link active">Calculator</a>
@@ -337,7 +365,7 @@
                 </div>
                 <div class="form-group">
                     <label for="initial-balance">Initial Balance ($):</label>
-                    <input type="number" id="initial-balance" value="20" min="1" step="1">
+                    <input type="number" id="initial-balance" value="200" min="1" step="1">
                 </div>
                 <div class="form-group">
                     <label for="risk-percentage">Risk Percentage (%):</label>
@@ -346,6 +374,10 @@
                 <div class="form-group">
                     <label for="target-amount">Target Amount ($):</label>
                     <input type="number" id="target-amount" value="50000" min="100" step="100">
+                </div>
+                <div class="form-group">
+                    <label for="pips-per-level">Pips per Level:</label>
+                    <input type="number" id="pips-per-level" value="20" min="1" max="100" step="1">
                 </div>
                 <div class="form-group">
                     <label for="currency-pair">Currency Pair:</label>
@@ -511,8 +543,7 @@
         // Calculator Module - Handles core calculations
         const Calculator = (function() {
             // Calculate progression for the 20 pip challenge
-            function calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue) {
-                const pips = 20; // Each level is 20 pips
+            function calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue, pipsPerLevel) {
                 let results = {
                     levels: [],
                     finalLevel: 0,
@@ -527,8 +558,8 @@
                 
                 while (!targetReached && !accountBlown && level <= 1000) {
                     const riskAmount = balance * riskPercentage;
-                    const lotSize = (riskAmount / (pips * pipValue)).toFixed(2);
-                    const profit = pipValue * pips * parseFloat(lotSize);
+                    const lotSize = (riskAmount / (pipsPerLevel * pipValue)).toFixed(2);
+                    const profit = pipValue * pipsPerLevel * parseFloat(lotSize);
                     const newBalance = balance + profit;
                     const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
                     
@@ -785,19 +816,19 @@
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-title">Average Balance</div>
-                            <div class="stat-value">${simulationResults.avgFinalBalance.toFixed(2)}</div>
+                            <div class="stat-value">$${simulationResults.avgFinalBalance.toFixed(2)}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-title">Median Balance</div>
-                            <div class="stat-value">${simulationResults.medianFinalBalance.toFixed(2)}</div>
+                            <div class="stat-value">$${simulationResults.medianFinalBalance.toFixed(2)}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-title">Best Case</div>
-                            <div class="stat-value text-success">${simulationResults.maxFinalBalance.toFixed(2)}</div>
+                            <div class="stat-value text-success">$${simulationResults.maxFinalBalance.toFixed(2)}</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-title">Worst Case</div>
-                            <div class="stat-value ${simulationResults.minFinalBalance < 1 ? 'text-danger' : ''}">${simulationResults.minFinalBalance.toFixed(2)}</div>
+                            <div class="stat-value ${simulationResults.minFinalBalance < 1 ? 'text-danger' : ''}">$${simulationResults.minFinalBalance.toFixed(2)}</div>
                         </div>
                     </div>
 
@@ -947,6 +978,15 @@
         
         // Main App
         document.addEventListener('DOMContentLoaded', function() {
+            // Sync pips per level with avg win on page load
+            document.getElementById('avg-win').value = document.getElementById('pips-per-level').value;
+            
+            // Keep them in sync when pips per level changes
+            document.getElementById('pips-per-level').addEventListener('input', function() {
+                document.getElementById('avg-win').value = this.value;
+                updateRiskReward();
+            });
+            
             // Set up tabs
             UI.setupTabs();
             
@@ -1021,7 +1061,8 @@
                 }
                 
                 // Calculate progression
-                const results = Calculator.calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue);
+                const pipsPerLevel = parseFloat(document.getElementById('pips-per-level').value);
+                const results = Calculator.calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue, pipsPerLevel);
                 
                 // Update UI
                 UI.updateProgressionTable(results);
