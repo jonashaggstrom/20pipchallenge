@@ -745,6 +745,7 @@
                 
                 // Add rows
                 results.levels.forEach(level => {
+                    const progression = ((level.level / results.finalLevel) * 100).toFixed(2);
                     const row = document.createElement('tr');
                     
                     if (level.newBalance >= parseFloat(document.getElementById('target-amount').value)) {
@@ -763,11 +764,17 @@
                         <td>${level.profit}</td>
                         <td>${level.newBalance.toFixed(2)}</td>
                         <td>${level.percentOfTarget}%</td>
-                        <td>${level.level / 1000 * 100}%</td>
+                        <td>${progression}%</td>
                     `;
                     
                     tableBody.appendChild(row);
                 });
+                
+                // Sätt progression till 100% för det sista steget
+                if (results.finalLevel > 0) {
+                    const lastRow = tableBody.lastChild;
+                    lastRow.querySelector('td:last-child').textContent = '100.00%'; // Sätt progression till 100% för sista steget
+                }
                 
                 // Display summary
                 const targetAmount = parseFloat(document.getElementById('target-amount').value);
