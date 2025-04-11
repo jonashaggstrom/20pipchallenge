@@ -570,11 +570,11 @@
                     const riskAmount = balance * riskPercentage;
                     const adr = parseFloat(document.getElementById('adr').value);
                     const leverage = parseFloat(document.getElementById('leverage').value);
-                    const lotSize = Math.min((riskAmount / (pipsPerLevel * pipValue)).toFixed(2), (riskAmount / (2 * adr * pipValue)).toFixed(2));
-                    const adjustedLotSize = Math.max(lotSize / leverage, 0.01);
                     const riskRewardRatio = parseFloat(document.getElementById('risk-reward').value);
-                    const profit = (pipValue * pipsPerLevel * adjustedLotSize * riskRewardRatio);
-                    const newBalance = balance + profit;
+                    const lotSize = Math.min((riskAmount / (pipsPerLevel * pipValue)).toFixed(2), (riskAmount / (2 * adr * pipValue)).toFixed(2));
+                    const adjustedLotSize = Math.max((lotSize / leverage).toFixed(2), 0.01);
+                    const profit = (riskAmount * riskRewardRatio).toFixed(2);
+                    const newBalance = balance + parseFloat(profit);
                     const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
                     
                     // Store level data
