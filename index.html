@@ -460,6 +460,7 @@
                                 <th>Profit ($)</th>
                                 <th>New Balance ($)</th>
                                 <th>% of Target</th>
+                                <th>Progression (%)</th>
                             </tr>
                         </thead>
                         <tbody id="table-body">
@@ -762,6 +763,7 @@
                         <td>${level.profit}</td>
                         <td>${level.newBalance.toFixed(2)}</td>
                         <td>${level.percentOfTarget}%</td>
+                        <td>${level.level / 1000 * 100}%</td>
                     `;
                     
                     tableBody.appendChild(row);
