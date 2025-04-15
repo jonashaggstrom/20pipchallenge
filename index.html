@@ -1006,6 +1006,24 @@
         
         // Main App
         document.addEventListener('DOMContentLoaded', function() {
+            // Set default value for R:R
+            const riskRewardElement = document.getElementById('risk-reward');
+            riskRewardElement.value = 1.3; // Ensure default is set
+
+            // Example usage
+            const accountBalance = 200; // Example account balance
+            const riskPercentage = 23; // Example risk percentage
+            const adr = 2.1; // Example ADR
+            const contractSize = 100; // Contract size
+
+            // Calculate lots
+            const lots = calculateLotSize(accountBalance, riskPercentage, adr, contractSize);
+            console.log(`Lots: ${lots.toFixed(2)}`); // Round to 2 decimals
+
+            // Retrieve R:R value
+            const riskReward = parseFloat(riskRewardElement.value);
+            console.log(`Risk:Reward (R:R): ${riskReward}`); // Should output 1.3
+            
             // Kontrollera att elementen finns innan du försöker använda dem
             const avgWinElement = document.getElementById('avg-win');
             const pipsPerLevelElement = document.getElementById('pips-per-level');
@@ -1369,16 +1387,6 @@
                 // 5. Write the workbook and trigger download
                 XLSX.writeFile(wb, "pip_challenge_journal.xlsx");
             }
-
-            // Hämta värden från input-fälten
-            const accountBalance = parseFloat(document.getElementById('initial-balance').value);
-            const riskPercentage = parseFloat(document.getElementById('risk-percentage').value);
-            const adr = parseFloat(document.getElementById('adr').value);
-            const contractSize = parseFloat(document.getElementById('contract-size').value) || 100; // Default to 100 if not set
-
-            // Beräkna lotstorlek
-            const lots = calculateLotSize(accountBalance, riskPercentage, adr, contractSize);
-            console.log(`Lots: ${lots.toFixed(2)}`);
         });
 
         // Funktion för att beräkna lotstorlek
