@@ -378,10 +378,6 @@
                     <input type="number" id="target-amount" value="50000" min="100" step="100">
                 </div>
                 <div class="form-group">
-                    <label for="pips-per-level">Pips per Level:</label>
-                    <input type="number" id="pips-per-level" value="20" min="1" max="100" step="1">
-                </div>
-                <div class="form-group">
                     <label for="currency-pair">Currency Pair:</label>
                     <select id="currency-pair">
                         <option value="EURUSD" data-pip-value="0.10">EUR/USD</option>
@@ -572,8 +568,8 @@
                     const adr = parseFloat(document.getElementById('adr').value);
                     const leverage = parseFloat(document.getElementById('leverage').value);
                     const riskRewardRatio = parseFloat(document.getElementById('risk-reward').value);
-                    const lotSize = Math.min((riskAmount / (pipsPerLevel * pipValue)).toFixed(2), (riskAmount / (2 * adr * pipValue)).toFixed(2));
-                    const adjustedLotSize = Math.max((lotSize / leverage).toFixed(2), 0.01);
+                    const lotSize = (riskAmount / (adr * pipValue)).toFixed(2);
+                    const adjustedLotSize = Math.max(lotSize / leverage, 0.01);
                     const profit = (riskAmount * riskRewardRatio);
                     const newBalance = balance + parseFloat(profit);
                     const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
