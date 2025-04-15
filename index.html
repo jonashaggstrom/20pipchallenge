@@ -425,7 +425,7 @@
                 </div>
                 <div class="form-group">
                     <label for="avg-win">Average Win (pips):</label>
-                    <input type="number" id="avg-win" value="20" min="1" step="1">
+                    <input type="number" id="avg-win" value="20">
                 </div>
                 <div class="form-group">
                     <label for="avg-loss">Average Loss (pips):</label>
@@ -437,6 +437,10 @@
                         <span class="tooltip-text">Maximum number of trades before simulation stops</span>
                     </label>
                     <input type="number" id="num-trades" value="500" min="10" step="10">
+                </div>
+                <div class="form-group">
+                    <label for="pips-per-level">Pips Per Level:</label>
+                    <input type="number" id="pips-per-level" value="10">
                 </div>
                 <button id="analyze-btn" class="btn-block">Analyze Strategy</button>
             </div>
@@ -1002,14 +1006,16 @@
         
         // Main App
         document.addEventListener('DOMContentLoaded', function() {
-            // Sync pips per level with avg win on page load
-            document.getElementById('avg-win').value = document.getElementById('pips-per-level').value;
-            
-            // Keep them in sync when pips per level changes
-            document.getElementById('pips-per-level').addEventListener('input', function() {
-                document.getElementById('avg-win').value = this.value;
-                updateRiskReward();
-            });
+            // Kontrollera att elementen finns innan du försöker använda dem
+            const avgWinElement = document.getElementById('avg-win');
+            const pipsPerLevelElement = document.getElementById('pips-per-level');
+
+            if (avgWinElement && pipsPerLevelElement) {
+                // Synkronisera pips per level med avg win vid sidladdning
+                avgWinElement.value = pipsPerLevelElement.value;
+            } else {
+                console.error("Ett eller flera element saknas i DOM:en.");
+            }
             
             // Set up tabs
             UI.setupTabs();
