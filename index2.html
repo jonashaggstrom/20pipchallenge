@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pip Challenge Calculator</title>
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <!-- Chart.js for visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --primary-light: #edf2fb;
+            --primary-dark: #3a0ca3;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition-speed: 0.3s;
+            --border-radius: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--gray-800);
+            background-color: #f5f7fb;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        h1, h2, h3 {
+            color: var(--gray-900);
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--primary-dark);
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            padding: 10px 20px;
+            text-decoration: none;
+            color: var(--gray-700);
+            font-weight: 500;
+            border-radius: var(--border-radius);
+            transition: all 0.3s ease;
+            background-color: var(--gray-200);
+        }
+        
+        .nav-link:hover {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+        
+        .nav-link.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .card-header h2 {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 200px;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        input, select {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            font-family: inherit;
+            transition: border-color var(--transition-speed);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color var(--transition-speed);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--gray-300);
+            margin-bottom: 1rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--gray-600);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color var(--transition-speed);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-300);
+        }
+
+        th {
+            background-color: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        tbody tr:hover {
+            background-color: var(--primary-light);
+        }
+
+        tr.success {
+            background-color: rgba(76, 201, 240, 0.15);
+        }
+
+        tr.success:hover {
+            background-color: rgba(76, 201, 240, 0.3);
+        }
+
+        tr.danger {
+            background-color: rgba(247, 37, 133, 0.15);
+        }
+
+        tr.danger:hover {
+            background-color: rgba(247, 37, 133, 0.3);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+        }
+
+        .stat-title {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25em 0.5em;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: rgba(76, 201, 240, 0.15);
+            color: var(--success-color);
+        }
+
+        .badge-danger {
+            background-color: rgba(247, 37, 133, 0.15);
+            color: var(--warning-color);
+        }
+
+        .summary {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .summary.success {
+            background-color: rgba(76, 201, 240, 0.15);
+            color: var(--primary-dark);
+        }
+
+        .summary.danger {
+            background-color: rgba(247, 37, 133, 0.15);
+            color: var(--warning-color);
+        }
+
+        /* Custom tooltip styles */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--gray-800);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+            font-weight: 400;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .text-success {
+            color: var(--success-color);
+        }
+        
+        .text-danger {
+            color: var(--warning-color);
+        }
+    </style>
+</head>
+<body>
+    <h1>Pip Challenge Calculator</h1>
+    
+    <div class="navigation">
+        <a href="#" class="nav-link active">Calculator</a>
+        <a href="#" class="nav-link" id="download-journal">Trading Journal</a>
+    </div>
+    
+    <div class="container">
+        <div class="left-column">
+            <!-- Parameters Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Trading Parameters</h2>
+                </div>
+                <div class="form-group">
+                    <label for="initial-balance">Initial Balance ($):</label>
+                    <input type="number" id="initial-balance" value="200">
+                </div>
+                <div class="form-group">
+                    <label for="risk-percentage">Risk Percentage (%):</label>
+                    <input type="number" id="risk-percentage" value="23">
+                </div>
+                <div class="form-group">
+                    <label for="target-amount">Target Balance ($):</label>
+                    <input type="number" id="target-amount" value="50000" min="100" step="100">
+                </div>
+                <div class="form-group">
+                    <label for="currency-pair">Currency Pair:</label>
+                    <select id="currency-pair">
+                        <option value="EURUSD" data-pip-value="0.10">EUR/USD</option>
+                        <option value="GBPUSD" data-pip-value="0.10">GBP/USD</option>
+                        <option value="USDJPY" data-pip-value="0.09">USD/JPY</option>
+                        <option value="AUDUSD" data-pip-value="0.10">AUD/USD</option>
+                        <option value="USDCAD" data-pip-value="0.07">USD/CAD</option>
+                        <option value="USDCHF" data-pip-value="0.10">USD/CHF</option>
+                        <option value="NZDUSD" data-pip-value="0.10">NZD/USD</option>
+                        <option value="XAUUSD" data-pip-value="1.00" selected>XAU/USD (Gold)</option>
+                        <option value="custom" data-pip-value="0.10">Custom...</option>
+                    </select>
+                </div>
+                <div class="form-group" id="custom-pip-container" style="display: none;">
+                    <label for="pip-value">Custom Pip Value per $1,000 ($):</label>
+                    <input type="number" id="pip-value" value="0.10" min="0.01" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="adr">Average Daily Range (ADR):</label>
+                    <input type="number" id="adr" value="2.1">
+                </div>
+                <div class="form-group">
+                    <label for="leverage">Leverage:</label>
+                    <input type="number" id="leverage" value="500" min="1" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="risk-reward">Risk:Reward (R:R):</label>
+                    <input type="number" id="risk-reward" value="1.3" step="0.1" min="0.1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="contract-size">Contract Size:</label>
+                    <input type="number" id="contract-size" value="100">
+                </div>
+                <button id="calculate-btn" class="btn-block">Calculate Challenge</button>
+            </div>
+
+            <!-- Strategy Analysis Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Strategy Analysis</h2>
+                </div>
+                <div class="form-group">
+                    <label for="win-rate">Win Rate (%):</label>
+                    <input type="number" id="win-rate" value="58" min="1" max="100" step="1">
+                </div>
+                <div class="form-group">
+                    <label for="avg-win">Average Win (pips):</label>
+                    <input type="number" id="avg-win" value="20">
+                </div>
+                <div class="form-group">
+                    <label for="avg-loss">Average Loss (pips):</label>
+                    <input type="number" id="avg-loss" value="15.4" min="1" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="num-trades" class="tooltip">
+                        Max Trades Cutoff:
+                        <span class="tooltip-text">Maximum number of trades before simulation stops</span>
+                    </label>
+                    <input type="number" id="num-trades" value="500" min="10" step="10">
+                </div>
+                <div class="form-group">
+                    <label for="pips-per-level">Pips Per Level:</label>
+                    <input type="number" id="pips-per-level" value="10">
+                </div>
+                <button id="analyze-btn" class="btn-block">Analyze Strategy</button>
+            </div>
+        </div>
+        
+        <div class="right-column">
+            <!-- Results Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Challenge Progression</h2>
+                </div>
+                <div id="summary"></div>
+                <div class="table-responsive">
+                    <table id="challenge-table">
+                        <thead>
+                            <tr>
+                                <th>Level</th>
+                                <th>Starting Balance ($)</th>
+                                <th>Risk Amount ($)</th>
+                                <th>Lot Size</th>
+                                <th>Profit ($)</th>
+                                <th>New Balance ($)</th>
+                                <th>% of Target</th>
+                                <th>Progression (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- Table rows will be generated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analysis Results Card -->
+            <div class="card" id="analysis-results-card" style="display: none;">
+                <div class="card-header">
+                    <h2>Analysis Results</h2>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" data-tab="overview">Overview</button>
+                    <button class="tab" data-tab="montecarlo">Monte Carlo</button>
+                    <button class="tab" data-tab="chart">Chart</button>
+                </div>
+                
+                <!-- Overview Tab -->
+                <div class="tab-content" id="overview-tab">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Risk:Reward Ratio</div>
+                            <div class="stat-value" id="current-risk-reward">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Profit Factor
+                                <span class="tooltip-text">Ratio of total profits to total losses</span>
+                            </div>
+                            <div class="stat-value" id="profit-factor">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Kelly Criterion
+                                <span class="tooltip-text">Optimal percentage of capital to risk on each trade</span>
+                            </div>
+                            <div class="stat-value" id="kelly-criterion">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Expected Value/Trade</div>
+                            <div class="stat-value" id="expected-value">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Probability of Success</div>
+                            <div class="stat-value" id="probability-target">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Risk of Ruin</div>
+                            <div class="stat-value" id="probability-ruin">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Risk-Adjusted Return
+                                <span class="tooltip-text">Profit factor adjusted for volatility</span>
+                            </div>
+                            <div class="stat-value" id="risk-adjusted-return">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Max Drawdown</div>
+                            <div class="stat-value" id="max-drawdown">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monte Carlo Tab -->
+                <div class="tab-content" id="montecarlo-tab" style="display: none;">
+                    <div id="monte-carlo-results">
+                        <p>Run the analysis to see Monte Carlo simulation results.</p>
+                    </div>
+                </div>
+                
+                <!-- Chart Tab -->
+                <div class="tab-content" id="chart-tab" style="display: none;">
+                    <div class="chart-container">
+                        <canvas id="balance-distribution-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Module pattern for better organization
+        // Calculator Module - Handles core calculations
+        const Calculator = (function() {
+            // Calculate progression for the 20 pip challenge
+            function calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue, pipsPerLevel) {
+                let results = {
+                    levels: [],
+                    finalLevel: 0,
+                    targetReached: false,
+                    accountBlown: false
+                };
+                
+                let level = 1;
+                let balance = initialBalance;
+                let targetReached = false;
+                let accountBlown = false;
+                
+                while (!targetReached && !accountBlown && level <= 1000) {
+                    const riskAmount = balance * riskPercentage;
+                    const adr = parseFloat(document.getElementById('adr').value);
+                    const leverage = parseFloat(document.getElementById('leverage').value);
+                    const riskRewardRatio = parseFloat(document.getElementById('risk-reward').value);
+                    const lotSize = (riskAmount / (adr * pipValue)).toFixed(2);
+                    const adjustedLotSize = Math.max(lotSize / leverage, 0.01);
+                    const profit = (riskAmount * riskRewardRatio);
+                    const newBalance = balance + parseFloat(profit);
+                    const percentOfTarget = (newBalance / targetAmount * 100).toFixed(2);
+                    
+                    // Store level data
+                    results.levels.push({
+                        level,
+                        startingBalance: balance,
+                        riskAmount,
+                        lotSize,
+                        adjustedLotSize,
+                        profit: parseFloat(profit).toFixed(2),
+                        newBalance,
+                        percentOfTarget
+                    });
+                    
+                    // Check for target or ruin
+                    if (newBalance >= targetAmount) {
+                        targetReached = true;
+                        results.targetReached = true;
+                    }
+                    
+                    if (newBalance < 1) {
+                        accountBlown = true;
+                        results.accountBlown = true;
+                    }
+                    
+                    // Update for next iteration
+                    balance = newBalance;
+                    level++;
+                }
+                
+                results.finalLevel = level - 1;
+                return results;
+            }
+            
+            // Return public methods
+            return {
+                calculateProgression
+            };
+        })();
+        
+        // Analyzer Module - Handles strategy analysis
+        const Analyzer = (function() {
+            // Run Monte Carlo simulation
+            function runMonteCarloSimulation(initialBalance, riskPercentage, winRate, avgWin, avgLoss, numTrades, numSimulations, targetAmount) {
+                // Track results
+                let finalBalances = [];
+                let successes = 0;
+                let failures = 0;
+                let timeouts = 0;
+                let maxDrawdowns = [];
+                let tradesCounts = [];
+                
+                for (let sim = 0; sim < numSimulations; sim++) {
+                    let balance = initialBalance;
+                    let peak = balance;
+                    let maxDrawdown = 0;
+                    let trades = 0;
+                    let simResult = 'timeout'; // Default: reached max trades without success/failure
+                    
+                    for (let trade = 0; trade < numTrades && balance > 0 && balance < targetAmount; trade++) {
+                        trades++;
+                        const riskAmount = balance * riskPercentage;
+                        const tradeResult = Math.random() < winRate; // True if win
+                        
+                        if (tradeResult) {
+                            // Win trade
+                            const lotSize = riskAmount / avgLoss;
+                            balance += lotSize * avgWin;
+                        } else {
+                            // Lose trade
+                            balance -= riskAmount;
+                        }
+                        
+                        // Update peak and max drawdown
+                        if (balance > peak) {
+                            peak = balance;
+                        } else {
+                            const currentDrawdown = (peak - balance) / peak;
+                            maxDrawdown = Math.max(maxDrawdown, currentDrawdown);
+                        }
+                        
+                        // Check for target or ruin
+                        if (balance >= targetAmount) {
+                            successes++;
+                            simResult = 'success';
+                            break;
+                        } else if (balance < 1) {
+                            failures++;
+                            simResult = 'failure';
+                            break;
+                        }
+                    }
+                    
+                    // If we reached max trades without success/failure
+                    if (simResult === 'timeout') {
+                        timeouts++;
+                    }
+                    
+                    finalBalances.push(balance);
+                    maxDrawdowns.push(maxDrawdown);
+                    tradesCounts.push(trades);
+                }
+                
+                // Sort balances for median
+                finalBalances.sort((a, b) => a - b);
+                
+                // Calculate statistics
+                return {
+                    avgFinalBalance: finalBalances.reduce((sum, bal) => sum + bal, 0) / numSimulations,
+                    medianFinalBalance: finalBalances[Math.floor(numSimulations / 2)],
+                    maxFinalBalance: Math.max(...finalBalances),
+                    minFinalBalance: Math.min(...finalBalances),
+                    probabilityReachTarget: successes / numSimulations,
+                    probabilityAccountBlown: failures / numSimulations,
+                    avgMaxDrawdown: maxDrawdowns.reduce((sum, dd) => sum + dd, 0) / numSimulations,
+                    accountsBlown: failures,
+                    accountsSucceeded: successes,
+                    accountsTimeout: timeouts,
+                    avgTrades: tradesCounts.reduce((sum, count) => sum + count, 0) / numSimulations,
+                    maxTrades: Math.max(...tradesCounts),
+                    minTrades: Math.min(...tradesCounts),
+                    finalBalances: finalBalances // Include all balances for histogram
+                };
+            }
+            
+            // Calculate strategy metrics
+            function calculateMetrics(winRate, avgWin, avgLoss, pipValue) {
+                const expectedWin = avgWin * pipValue;
+                const expectedLoss = avgLoss * pipValue;
+                const profitFactor = (winRate * expectedWin) / ((1 - winRate) * expectedLoss);
+                
+                // Calculate Kelly Criterion
+                const b = expectedWin / expectedLoss; // Ratio of average win to average loss
+                const kellyPercentage = (winRate * (b + 1) - 1) / b;
+                
+                // Calculate expected value per trade
+                const expectedValue = (winRate * expectedWin) - ((1 - winRate) * expectedLoss);
+                
+                // Risk adjusted return
+                const riskAdjustedReturn = profitFactor / (Math.sqrt(avgLoss * pipValue));
+                
+                return {
+                    profitFactor,
+                    kellyPercentage,
+                    expectedValue,
+                    riskAdjustedReturn,
+                    riskRewardRatio: avgWin / avgLoss
+                };
+            }
+            
+            // Return public methods
+            return {
+                runMonteCarloSimulation,
+                calculateMetrics
+            };
+        })();
+        
+        // UI Module - Handles UI updates
+        const UI = (function() {
+            // Update challenge progression table
+            function updateProgressionTable(results) {
+                const tableBody = document.getElementById('table-body');
+                const summaryDiv = document.getElementById('summary');
+                
+                // Clear table
+                tableBody.innerHTML = '';
+                
+                // Add rows
+                results.levels.forEach(level => {
+                    const progression = ((level.level / results.finalLevel) * 100).toFixed(2);
+                    const row = document.createElement('tr');
+                    
+                    if (level.newBalance >= parseFloat(document.getElementById('target-amount').value)) {
+                        row.classList.add('success');
+                    }
+                    
+                    if (level.newBalance < 1) {
+                        row.classList.add('danger');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${level.level}</td>
+                        <td>${level.startingBalance.toFixed(2)}</td>
+                        <td>${level.riskAmount.toFixed(2)}</td>
+                        <td>${level.adjustedLotSize.toFixed(2)}</td>
+                        <td>${level.profit}</td>
+                        <td>${level.newBalance.toFixed(2)}</td>
+                        <td>${level.percentOfTarget}%</td>
+                        <td>${progression}%</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // Sätt progression till 100% för det sista steget
+                if (results.finalLevel > 0) {
+                    const lastRow = tableBody.lastChild;
+                    lastRow.querySelector('td:last-child').textContent = '100.00%'; // Sätt progression till 100% för sista steget
+                }
+                
+                // Display summary
+                const targetAmount = parseFloat(document.getElementById('target-amount').value);
+                if (results.targetReached) {
+                    summaryDiv.innerHTML = `<div class="summary success"><strong>Success!</strong> Target of $${targetAmount.toFixed(2)} reached in ${results.finalLevel} trades (levels).</div>`;
+                } else if (results.accountBlown) {
+                    summaryDiv.innerHTML = `<div class="summary danger"><strong>Account blown!</strong> Balance fell below $1 at level ${results.finalLevel}.</div>`;
+                } else {
+                    summaryDiv.innerHTML = `<div class="summary"><strong>Calculation stopped</strong> after 1000 levels without reaching target.</div>`;
+                }
+            }
+            
+            // Update analysis results
+            function updateAnalysisResults(metrics, simulationResults) {
+                // Show the results card
+                document.getElementById('analysis-results-card').style.display = 'block';
+                
+                // Update metrics
+                document.getElementById('current-risk-reward').textContent = `1:${metrics.riskRewardRatio.toFixed(2)}`;
+                document.getElementById('profit-factor').textContent = metrics.profitFactor.toFixed(2);
+                document.getElementById('kelly-criterion').textContent = 
+                    metrics.kellyPercentage > 0 ? 
+                    `${(metrics.kellyPercentage * 100).toFixed(2)}%` : 
+                    "Negative";
+                document.getElementById('expected-value').textContent = `$${metrics.expectedValue.toFixed(2)}`;
+                document.getElementById('probability-target').textContent = `${(simulationResults.probabilityReachTarget * 100).toFixed(2)}%`;
+                document.getElementById('probability-ruin').textContent = `${(simulationResults.probabilityAccountBlown * 100).toFixed(2)}%`;
+                document.getElementById('risk-adjusted-return').textContent = metrics.riskAdjustedReturn.toFixed(2);
+                document.getElementById('max-drawdown').textContent = `${(simulationResults.avgMaxDrawdown * 100).toFixed(2)}%`;
+                
+                // Display Monte Carlo results
+                document.getElementById('monte-carlo-results').innerHTML = `
+                    <h3>Simulation Overview</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Total Simulations</div>
+                            <div class="stat-value">1,000</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Accounts Succeeded
+                                <span class="tooltip-text">Accounts that reached the target amount</span>
+                            </div>
+                            <div class="stat-value ${simulationResults.accountsSucceeded > 0 ? 'text-success' : ''}">${simulationResults.accountsSucceeded}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Accounts Blown
+                                <span class="tooltip-text">Accounts that fell below $1</span>
+                            </div>
+                            <div class="stat-value ${simulationResults.accountsBlown > 0 ? 'text-danger' : ''}">${simulationResults.accountsBlown}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title tooltip">
+                                Trade Cutoff Reached
+                                <span class="tooltip-text">Accounts that reached max trade cutoff without success/failure</span>
+                            </div>
+                            <div class="stat-value">${simulationResults.accountsTimeout}</div>
+                        </div>
+                    </div>
+
+                    <h3>Balance Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Average Balance</div>
+                            <div class="stat-value">$${simulationResults.avgFinalBalance.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Median Balance</div>
+                            <div class="stat-value">$${simulationResults.medianFinalBalance.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Best Case</div>
+                            <div class="stat-value text-success">$${simulationResults.maxFinalBalance.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Worst Case</div>
+                            <div class="stat-value ${simulationResults.minFinalBalance < 1 ? 'text-danger' : ''}">$${simulationResults.minFinalBalance.toFixed(2)}</div>
+                        </div>
+                    </div>
+
+                    <h3>Trade Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Average Trades</div>
+                            <div class="stat-value">${simulationResults.avgTrades.toFixed(0)}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Maximum Trades</div>
+                            <div class="stat-value">${simulationResults.maxTrades}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Minimum Trades</div>
+                            <div class="stat-value">${simulationResults.minTrades}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-title">Success Rate</div>
+                            <div class="stat-value">${(simulationResults.probabilityReachTarget * 100).toFixed(2)}%</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Create histogram chart
+                createHistogram(simulationResults.finalBalances);
+            }
+            
+            // Create histogram of final balances
+            function createHistogram(finalBalances) {
+                // Prepare data for histogram
+                const maxBalance = Math.max(...finalBalances);
+                const numBuckets = 20;
+                const bucketSize = maxBalance / numBuckets;
+                
+                let buckets = Array(numBuckets).fill(0);
+                let labels = [];
+                
+                // Create bucket labels
+                for (let i = 0; i < numBuckets; i++) {
+                    const minValue = i * bucketSize;
+                    const maxValue = (i + 1) * bucketSize;
+                    labels.push(`$${minValue.toFixed(0)} - $${maxValue.toFixed(0)}`);
+                }
+                
+                // Fill buckets
+                finalBalances.forEach(balance => {
+                    const bucketIndex = Math.min(Math.floor(balance / bucketSize), numBuckets - 1);
+                    buckets[bucketIndex]++;
+                });
+                
+                // Create chart
+                const ctx = document.getElementById('balance-distribution-chart').getContext('2d');
+                
+                // Destroy previous chart if it exists
+                if (window.balanceChart) {
+                    window.balanceChart.destroy();
+                }
+                
+                window.balanceChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Number of Accounts',
+                            data: buckets,
+                            backgroundColor: 'rgba(67, 97, 238, 0.7)',
+                            borderColor: 'rgba(67, 97, 238, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Final Account Balance Distribution',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.raw} accounts (${(context.raw / finalBalances.length * 100).toFixed(1)}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Final Balance'
+                                },
+                                ticks: {
+                                    maxRotation: 90,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Number of Accounts'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Tab switching
+            function setupTabs() {
+                const tabs = document.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        // Remove active class from all tabs
+                        tabs.forEach(t => t.classList.remove('active'));
+                        
+                        // Add active class to clicked tab
+                        tab.classList.add('active');
+                        
+                        // Hide all tab content
+                        document.querySelectorAll('.tab-content').forEach(content => {
+                            content.style.display = 'none';
+                        });
+                        
+                        // Show selected tab content
+                        const targetTab = tab.getAttribute('data-tab');
+                        document.getElementById(`${targetTab}-tab`).style.display = 'block';
+                    });
+                });
+            }
+            
+            // Return public methods
+            return {
+                updateProgressionTable,
+                updateAnalysisResults,
+                setupTabs
+            };
+        })();
+        
+        // Main App
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default value for R:R
+            const riskRewardElement = document.getElementById('risk-reward');
+            riskRewardElement.value = 1.3; // Ensure default is set
+
+            // Example usage
+            const accountBalance = 200; // Example account balance
+            const riskPercentage = 23; // Example risk percentage
+            const adr = 2.1; // Example ADR
+            const contractSize = 100; // Contract size
+
+            // Calculate lots
+            const lots = calculateLotSize(accountBalance, riskPercentage, adr, contractSize);
+            console.log(`Lots: ${lots.toFixed(2)}`); // Round to 2 decimals
+
+            // Retrieve R:R value
+            const riskReward = parseFloat(riskRewardElement.value);
+            console.log(`Risk:Reward (R:R): ${riskReward}`); // Should output 1.3
+            
+            // Kontrollera att elementen finns innan du försöker använda dem
+            const avgWinElement = document.getElementById('avg-win');
+            const pipsPerLevelElement = document.getElementById('pips-per-level');
+
+            if (avgWinElement && pipsPerLevelElement) {
+                // Synkronisera pips per level med avg win vid sidladdning
+                avgWinElement.value = pipsPerLevelElement.value;
+            } else {
+                console.error("Ett eller flera element saknas i DOM:en.");
+            }
+            
+            // Set up tabs
+            UI.setupTabs();
+            
+            // Set up event listeners for risk:reward ratio calculations
+            const avgWinInput = document.getElementById('avg-win');
+            const avgLossInput = document.getElementById('avg-loss');
+            const riskRewardInput = document.getElementById('risk-reward');
+            
+            avgWinInput.addEventListener('input', updateRiskReward);
+            avgLossInput.addEventListener('input', updateRiskRewardFromLoss);
+            riskRewardInput.addEventListener('input', updateAvgLoss);
+            
+            function updateRiskReward() {
+                const avgWin = parseFloat(avgWinInput.value);
+                const avgLoss = parseFloat(avgLossInput.value);
+                if (avgLoss > 0) {
+                    const riskReward = avgWin / avgLoss;
+                    riskRewardInput.value = riskReward.toFixed(1);
+                }
+            }
+            
+            function updateRiskRewardFromLoss() {
+                const avgWin = parseFloat(avgWinInput.value);
+                const avgLoss = parseFloat(avgLossInput.value);
+                if (avgLoss > 0) {
+                    const riskReward = avgWin / avgLoss;
+                    riskRewardInput.value = riskReward.toFixed(1);
+                }
+            }
+            
+            function updateAvgLoss() {
+                const avgWin = parseFloat(avgWinInput.value);
+                const riskReward = parseFloat(riskRewardInput.value);
+                if (riskReward > 0) {
+                    const avgLoss = avgWin / riskReward;
+                    avgLossInput.value = avgLoss.toFixed(1);
+                }
+            }
+            
+            // Initialize risk:reward calculation
+            updateRiskReward();
+            
+            // Set up currency pair selection
+            const currencyPairSelect = document.getElementById('currency-pair');
+            const customPipContainer = document.getElementById('custom-pip-container');
+            
+            currencyPairSelect.addEventListener('change', function() {
+                if (currencyPairSelect.value === 'custom') {
+                    customPipContainer.style.display = 'flex';
+                } else {
+                    customPipContainer.style.display = 'none';
+                }
+                
+                // Auto-recalculate when changing currency
+                document.getElementById('calculate-btn').click();
+            });
+            
+            // Calculate button
+            document.getElementById('calculate-btn').addEventListener('click', function() {
+                const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+                const riskPercentage = parseFloat(document.getElementById('risk-percentage').value) / 100;
+                const targetAmount = parseFloat(document.getElementById('target-amount').value);
+                
+                // Get pip value based on currency pair selection
+                let pipValue;
+                const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+                
+                if (currencyPairSelect.value === 'custom') {
+                    pipValue = parseFloat(document.getElementById('pip-value').value);
+                } else {
+                    pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+                }
+                
+                // Calculate progression
+                const pipsPerLevel = parseFloat(document.getElementById('pips-per-level').value);
+                const results = Calculator.calculateProgression(initialBalance, riskPercentage, targetAmount, pipValue, pipsPerLevel);
+                
+                // Update UI
+                UI.updateProgressionTable(results);
+            });
+            
+            // Analyze button
+            document.getElementById('analyze-btn').addEventListener('click', function() {
+                const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+                const riskPercentage = parseFloat(document.getElementById('risk-percentage').value) / 100;
+                const targetAmount = parseFloat(document.getElementById('target-amount').value);
+                const winRate = parseFloat(document.getElementById('win-rate').value) / 100;
+                const avgWin = parseFloat(avgWinInput.value);
+                const avgLoss = parseFloat(avgLossInput.value);
+                const numTrades = parseInt(document.getElementById('num-trades').value);
+                
+                // Get pip value based on currency pair selection
+                let pipValue;
+                const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+                
+                if (currencyPairSelect.value === 'custom') {
+                    pipValue = parseFloat(document.getElementById('pip-value').value);
+                } else {
+                    pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+                }
+                
+                // Calculate metrics
+                const metrics = Analyzer.calculateMetrics(winRate, avgWin, avgLoss, pipValue);
+                
+                // Run Monte Carlo simulation
+                const simulationResults = Analyzer.runMonteCarloSimulation(
+                    initialBalance, 
+                    riskPercentage, 
+                    winRate, 
+                    avgWin * pipValue, 
+                    avgLoss * pipValue, 
+                    numTrades, 
+                    1000, // 1000 simulations
+                    targetAmount
+                );
+                
+                // Update UI
+                UI.updateAnalysisResults(metrics, simulationResults);
+            });
+            
+            // Initial calculation
+            document.getElementById('calculate-btn').click();
+            
+            // Add Trading Journal download functionality
+            document.getElementById('download-journal').addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent the default link behavior
+                downloadJournalTemplate();
+            });
+            
+            // Function to download a template Excel file for the journal
+            function downloadJournalTemplate() {
+                // Get current parameters for default values
+                const initialBalance = parseFloat(document.getElementById('initial-balance').value);
+                const riskPercentage = parseFloat(document.getElementById('risk-percentage').value);
+                const targetAmount = parseFloat(document.getElementById('target-amount').value);
+                const pipsPerLevel = parseFloat(document.getElementById('pips-per-level').value);
+                const currencyPairSelect = document.getElementById('currency-pair');
+                const currencyPair = currencyPairSelect.value;
+                
+                // Get pip value based on currency pair selection
+                let pipValue;
+                const selectedOption = currencyPairSelect.options[currencyPairSelect.selectedIndex];
+                
+                if (currencyPairSelect.value === 'custom') {
+                    pipValue = parseFloat(document.getElementById('pip-value').value);
+                } else {
+                    pipValue = parseFloat(selectedOption.getAttribute('data-pip-value'));
+                }
+                
+                // Create a new workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Add metadata
+                wb.Props = {
+                    Title: "Pip Challenge Trading Journal",
+                    Subject: "Trading",
+                    Author: "Pip Challenge Calculator",
+                    CreatedDate: new Date()
+                };
+                
+                // 1. Settings Worksheet
+                const settingsData = [
+                    ['Pip Challenge Settings', ''],
+                    ['Setting', 'Value'],
+                    ['Initial Balance ($)', initialBalance],
+                    ['Risk Percentage (%)', riskPercentage],
+                    ['Target Amount ($)', targetAmount],
+                    ['Pips Per Level', pipsPerLevel],
+                    ['Currency Pair', currencyPair],
+                    ['Pip Value per $1,000', pipValue]
+                ];
+                
+                const settingsWS = XLSX.utils.aoa_to_sheet(settingsData);
+                XLSX.utils.book_append_sheet(wb, settingsWS, "Settings");
+                
+                // 2. Instructions Worksheet
+                const instructionsData = [
+                    ['Pip Challenge Instructions', ''],
+                    ['', ''],
+                    ['The Pip Challenge is a trading strategy where you:', ''],
+                    [`1. Start with ${initialBalance}`, ''],
+                    [`2. Risk ${riskPercentage}% of your balance on each trade`, ''],
+                    [`3. Target ${pipsPerLevel} pips of profit per trade`, ''],
+                    [`4. Goal is to reach ${targetAmount} without blowing your account`, ''],
+                    ['5. Account is considered blown when balance falls below $1', ''],
+                    ['', ''],
+                    ['How to Use This Journal:', ''],
+                    ['1. Enter your trades in the "Journal" sheet', ''],
+                    ['2. Fill in Level, Direction, Entry Price, and Close Price', ''],
+                    ['3. The remaining cells will be calculated automatically', ''],
+                    ['4. Use the "Statistics" sheet to track your progress', ''],
+                    ['', ''],
+                    ['Tips for Success:', ''],
+                    ['- Be consistent with your risk management', ''],
+                    ['- Only take high-probability setups', ''],
+                    ['- Maintain emotional discipline', ''],
+                    ['- Review your trades regularly to identify patterns', '']
+                ];
+                
+                const instructionsWS = XLSX.utils.aoa_to_sheet(instructionsData);
+                
+                // Set column widths for instructions
+                instructionsWS['!cols'] = [
+                    {wch: 50},  // Column A width
+                    {wch: 10}   // Column B width
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, instructionsWS, "Instructions");
+                
+                // 3. Journal Worksheet with formulas
+                const journalHeaders = [
+                    'Level', 
+                    'Date', 
+                    'Direction', 
+                    'Entry Price', 
+                    'Close Price', 
+                    'Starting Balance ($)', 
+                    'Risk Amount ($)', 
+                    'Lot Size',
+                    'Profit/Loss ($)', 
+                    'New Balance ($)', 
+                    'Notes'
+                ];
+                
+                // Create sample data for the journal
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Calculate sample values
+                const sampleRiskAmount = initialBalance * (riskPercentage/100);
+                const sampleLots = sampleRiskAmount / (0.01 * (2 * adr));
+                const sampleProfit = (pipValue * pipsPerLevel * parseFloat(sampleLots)).toFixed(2);
+                const sampleNewBalance = (initialBalance + parseFloat(sampleProfit)).toFixed(2);
+                
+                const sampleData = [
+                    [
+                        1, 
+                        today, 
+                        'Long', 
+                        1950.00, 
+                        1970.00, 
+                        initialBalance, 
+                        sampleRiskAmount, 
+                        sampleLots,
+                        sampleProfit,
+                        sampleNewBalance,
+                        'Example trade - 20 pip win'
+                    ]
+                ];
+                
+                // Create journal data with headers and sample row
+                const journalData = [journalHeaders, ...sampleData];
+                
+                // Add 50 empty rows with formulas for calculations
+                for (let i = 0; i < 50; i++) {
+                    const level = i + 2;
+                    // Empty row with formulas
+                    // In Excel, each cell will reference the cell above it or calculate values based on inputs
+                    journalData.push([
+                        level,                                          // Level 
+                        '',                                             // Date - user input
+                        '',                                             // Direction - user input
+                        '',                                             // Entry Price - user input
+                        '',                                             // Close Price - user input
+                        `=J${level-1}`,                                 // Starting Balance = previous row's New Balance
+                        `=F${level}*${riskPercentage/100}`,            // Risk Amount = Starting Balance * Risk %
+                        `=G${level}/(${pipsPerLevel}*${pipValue})`,    // Lot Size = Risk Amount / (Pips * Pip Value)
+                        '',                                             // Profit/Loss - will add formula below
+                        `=F${level}+I${level}`,                         // New Balance = Starting Balance + Profit/Loss
+                        ''                                              // Notes - user input
+                    ]);
+                }
+                
+                const journalWS = XLSX.utils.aoa_to_sheet(journalData);
+                
+                // Set column widths
+                journalWS['!cols'] = [
+                    {wch: 6},   // Level
+                    {wch: 12},  // Date
+                    {wch: 10},  // Direction
+                    {wch: 12},  // Entry
+                    {wch: 12},  // Close
+                    {wch: 16},  // Starting Balance
+                    {wch: 14},  // Risk Amount
+                    {wch: 10},  // Lot Size
+                    {wch: 14},  // Profit/Loss
+                    {wch: 14},  // New Balance
+                    {wch: 30}   // Notes
+                ];
+                
+                // We'll add a complex formula for profit/loss calculation
+                // This formula needs to check Direction and calculate accordingly
+                for (let i = 3; i <= 52; i++) { // Start from row 3 (after header and sample)
+                    const rowIndex = XLSX.utils.encode_cell({r: i, c: 8}); // I column (Profit/Loss)
+                    const dirCell = XLSX.utils.encode_cell({r: i, c: 2});  // C column (Direction)
+                    const entryCell = XLSX.utils.encode_cell({r: i, c: 3}); // D column (Entry)
+                    const closeCell = XLSX.utils.encode_cell({r: i, c: 4}); // E column (Close)
+                    const lotCell = XLSX.utils.encode_cell({r: i, c: 7});   // H column (Lot Size)
+                    
+                    // Formula: IF Direction is "Long", then (Close-Entry)*LotSize*PipValue/PipSize, else (Entry-Close)*LotSize*PipValue/PipSize
+                    journalWS[rowIndex] = {
+                        f: `IF(OR(${dirCell}="Long",${dirCell}="LONG",${dirCell}="long"),
+                              (${closeCell}-${entryCell})*${lotCell}*${pipValue}/${currencyPair.includes('JPY') ? 0.01 : 0.0001},
+                              (${entryCell}-${closeCell})*${lotCell}*${pipValue}/${currencyPair.includes('JPY') ? 0.01 : 0.0001})`
+                    };
+                }
+                
+                XLSX.utils.book_append_sheet(wb, journalWS, "Journal");
+                
+                // 4. Statistics Worksheet with formulas to analyze performance
+                const statsData = [
+                    ['Pip Challenge Statistics', ''],
+                    ['', ''],
+                    ['Performance Metrics', 'Value'],
+                    ['Total Trades', '=COUNTA(Journal!A:A)-1'],
+                    ['Winning Trades', '=COUNTIF(Journal!I:I,">0")'],
+                    ['Losing Trades', '=COUNTIF(Journal!I:I,"<0")'],
+                    ['Win Rate (%)', '=IF(D4>0,D5/D4*100,0)'],
+                    ['', ''],
+                    ['Profit Metrics', ''],
+                    ['Total Profit ($)', '=SUMIF(Journal!I:I,">0")'],
+                    ['Total Loss ($)', '=ABS(SUMIF(Journal!I:I,"<0"))'],
+                    ['Net Profit ($)', '=D10-D11'],
+                    ['Profit Factor', '=IF(D11>0,D10/D11,"N/A")'],
+                    ['Average Win ($)', '=AVERAGEIF(Journal!I:I,">0")'],
+                    ['Average Loss ($)', '=ABS(AVERAGEIF(Journal!I:I,"<0"))'],
+                    ['', ''],
+                    ['Progress', ''],
+                    ['Current Balance ($)', '=MAX(Journal!J:J)'],
+                    ['Initial Balance ($)', '=MIN(Journal!F:F)'],
+                    ['Growth ($)', '=D18-D19'],
+                    ['Growth (%)', '=D20/D19*100'],
+                    ['Target Amount ($)', targetAmount],
+                    ['Progress to Target (%)', '=D18/D23*100'],
+                    ['', ''],
+                    ['Challenge Status', '=IF(D18>=D23,"TARGET REACHED!",IF(D18<1,"ACCOUNT BLOWN","IN PROGRESS"))']
+                ];
+                
+                const statsWS = XLSX.utils.aoa_to_sheet(statsData);
+                
+                // Set column widths
+                statsWS['!cols'] = [
+                    {wch: 5},   // A column
+                    {wch: 5},   // B column
+                    {wch: 25},  // C column
+                    {wch: 15}   // D column
+                ];
+                
+                XLSX.utils.book_append_sheet(wb, statsWS, "Statistics");
+                
+                // 5. Write the workbook and trigger download
+                XLSX.writeFile(wb, "pip_challenge_journal.xlsx");
+            }
+        });
+
+        // Funktion för att beräkna lotstorlek
+        function calculateLotSize(accountBalance, riskPercentage, adr, contractSize) {
+            const riskAmount = accountBalance * (riskPercentage / 100);
+            const stopLossDistance = 2 * adr; // Använder 2 * ADR som stop loss-avstånd
+            const pips = stopLossDistance / 0.01; // Konvertera prisdifferens till pips
+            const pipValue = 0.01; // Pip-värde för XAU/USD
+
+            // Beräkna lotstorlek
+            const lots = riskAmount / (pipValue * pips);
+            return lots / contractSize; // Konvertera till lots
+        }
+    </script>
+</body>
+</html>
